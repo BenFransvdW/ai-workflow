@@ -1,0 +1,17 @@
+[Unit]
+Description=Shorts pipeline: Telegram approval bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/shorts
+ExecStart=/home/pi/shorts/.venv/bin/python -m shorts --config /home/pi/shorts/config.yaml bot
+Restart=always
+RestartSec=15
+Nice=5
+# Secrets come from /home/pi/shorts/.env (loaded by the app itself).
+
+[Install]
+WantedBy=multi-user.target

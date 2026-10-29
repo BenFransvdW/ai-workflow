@@ -15,15 +15,15 @@ class FlowField(Style):
         super().__init__(width, height, fps, rng)
         self.pal = palette(rng, 5)
         scale = width / 540
-        self.n = int(rng.integers(3000, 7000) * scale ** 2) or 50
+        self.n = int(rng.integers(1200, 2600) * scale ** 2) or 50
         self.pos = np.stack([rng.uniform(0, width, self.n), rng.uniform(0, height, self.n)], 1).astype(np.float32)
         self.life = rng.uniform(0, 1, self.n).astype(np.float32)
         self.speed = float(rng.uniform(1.2, 2.6)) * scale * 30 / fps
         self.f = (rng.uniform(0.002, 0.008, 4) / scale).astype(np.float32)
         self.tw = rng.uniform(0.05, 0.25, 4).astype(np.float32)
         self.curl = float(rng.uniform(1.0, 2.5))
-        self.decay = float(rng.uniform(0.9, 0.96))
-        self.gain = float(rng.uniform(1.0, 1.8))
+        self.decay = float(rng.uniform(0.93, 0.97))
+        self.gain = float(rng.uniform(0.7, 1.2))
         hues = self.pal["base_hue"] + rng.choice([0, 0.08, 0.5, 0.33], self.n) + rng.normal(0, 0.03, self.n)
         self.colors = np.array([hsl(h, 0.8, 0.55) for h in hues[:256]], np.float32)
         self.color_idx = rng.integers(0, len(self.colors), self.n)
@@ -66,5 +66,8 @@ class FlowField(Style):
         if k:
             self.pos[dead] = np.stack([self.rng.uniform(0, self.w, k), self.rng.uniform(0, self.h, k)], 1)
             self.life[dead] = self.rng.uniform(0.5, 1.0, k)
-        light = 1 - np.exp(-self.buf.reshape(self.h, self.w, 3) * self.gain)
+        b = self.buf.reshape(self.h, self.w, 3)
+        # Soften 1-px trails (a cheap 5-tap blur): looks glowier and compresses far better.
+        soft = (2 * b + np.roll(b, 1, 0) + np.roll(b, -1, 0) + np.roll(b, 1, 1) + np.roll(b, -1, 1)) / 6
+        light = 1 - np.exp(-soft * self.gain * 1.3)
         return (self.bg + light) * self.vig

@@ -141,6 +141,7 @@ class ComposeConfig(_Model):
     fps: int = 30
     crf: int = 21
     preset: str = "veryfast"
+    maxrate_mbps: float = 10  # caps bitrate for noisy backgrounds (YouTube recommends ~8-12 Mbps for 1080p)
     max_seconds: float = Field(59, le=60)
     max_speedup: float = 1.12
     loudness_i: float = -14

@@ -1,0 +1,16 @@
+[Unit]
+Description=Shorts pipeline: one orchestrator pass (expire, upload approved, top up backlog)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=pi
+WorkingDirectory=/home/pi/shorts
+# Add --live once you have tested OAuth and want real uploads (or set upload.dry_run: false).
+ExecStart=/home/pi/shorts/.venv/bin/python -m shorts --config /home/pi/shorts/config.yaml run
+# Rendering is CPU-heavy; keep the Pi responsive.
+Nice=10
+IOSchedulingClass=idle
+CPUWeight=50
+TimeoutStartSec=2h

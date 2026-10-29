@@ -72,11 +72,11 @@ captions:
       shadow: 0
       uppercase: false
       animation: karaoke
-      position_y: 0.6
+      position_y: 0.4
     soft_fade:
       font: DejaVu Serif
       bold: true
-      size: 88
+      size: 96
       primary: "#F4F1EA"
       highlight: "#C3A6FF"
       outline: "#1B1035"
@@ -131,7 +131,8 @@ compose:
   height: 1920
   fps: 30
   crf: 21
-  preset: veryfast
+  preset: veryfast # libx264; the Pi 5 has no hardware H.264 encoder
+  maxrate_mbps: 10 # bitrate cap for very detailed backgrounds
   max_seconds: 59
   max_speedup: 1.12
   loudness_i: -14

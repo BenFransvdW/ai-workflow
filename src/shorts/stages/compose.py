@@ -80,7 +80,8 @@ def render_video(cfg: Config, *, segment: Segment, audio: Path, ass: Path | None
     audio_idx = n
     media.ffmpeg(
         *args, "-i", audio, "-filter_complex", fc, "-map", "[v]", "-map", f"{audio_idx}:a",
-        "-c:v", "libx264", "-preset", c.preset, "-crf", str(c.crf), "-profile:v", "high", "-r", str(c.fps),
+        "-c:v", "libx264", "-preset", c.preset, "-crf", str(c.crf), "-maxrate", f"{c.maxrate_mbps}M",
+        "-bufsize", f"{2 * c.maxrate_mbps}M", "-profile:v", "high", "-r", str(c.fps),
         "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-t", f"{total:.3f}", "-movflags", "+faststart", out,
     )
 
