@@ -64,3 +64,30 @@ def insert_story(conn, **overrides) -> int:
     cols = ",".join(base)
     cur = conn.execute(f"INSERT INTO stories({cols}) VALUES ({','.join('?' for _ in base)})", list(base.values()))
     return cur.lastrowid
+
+
+def make_group(ctx, upto: str = "awaiting_approval", parts: int = 1, series: str = "verdict_hour",
+               reddit_id: str | None = None, with_file: bool = True) -> int:
+    """A story + group walked through the state machine up to `upto`, with a tiny dummy mp4 per part."""
+    import json as _json
+
+    from shorts import records
+    from shorts.state import State, transition_group
+
+    sid = insert_story(ctx.conn, reddit_id=reddit_id or f"t3_{ctx.conn.execute('SELECT COUNT(*) FROM stories').fetchone()[0]}")
+    gid = records.create_group(ctx.conn, sid, series, voice="ryan_piper", caption_style="bold_pop", music_bed="tense")
+    for i in range(2, parts + 1):
+        records.create_video(ctx.conn, gid, i, parts)
+    order = ["scripted", "rendered", "awaiting_approval", "approved"]
+    for v in records.group_videos(ctx.conn, gid):
+        path = ctx.work_dir("videos", v["id"]) / f"short_{v['id']}.mp4"
+        if with_file:
+            path.write_bytes(b"\x00" * 1024)
+        suffix = f" (Part {v['part_index']}/{parts})" if parts > 1 else ""
+        ctx.conn.execute(
+            "UPDATE videos SET part_count=?, title=?, description=?, tags_json=?, video_path=?, duration=30 WHERE id=?",
+            (parts, f"A Story Title{suffix}", "Teaser.\n\nStory submitted by u/x on r/AITAH, adapted.",
+             _json.dumps(["aita", "reddit stories"]), str(path), v["id"]))
+    for st in order[: order.index(upto) + 1] if upto in order else []:
+        transition_group(ctx.conn, gid, State(st), "test setup")
+    return gid

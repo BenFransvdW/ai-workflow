@@ -45,10 +45,11 @@ def candidate_story(conn: sqlite3.Connection, series: SeriesConfig, rng: random.
     return rng.choice(top)["id"]
 
 
-def choose(conn: sqlite3.Connection, cfg: Config, rng: random.Random | None = None) -> Selection | None:
+def choose(conn: sqlite3.Connection, cfg: Config, rng: random.Random | None = None,
+           only: list[str] | None = None) -> Selection | None:
     """Pick the next series (least recently used that has a story available) and its options."""
     rng = rng or random.Random()
-    names = [s.name for s in cfg.series]
+    names = [s.name for s in cfg.series if only is None or s.name in only]
     tried: set[str] = set()
     while len(tried) < len(names):
         name = _least_recent(conn, "series", [n for n in names if n not in tried], None, rng)

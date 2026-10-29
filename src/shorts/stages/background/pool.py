@@ -14,7 +14,7 @@ import time
 
 from ...config import PROCEDURAL_STYLES, SeriesBackground
 from ...context import Ctx
-from .base import BackgroundProvider, NoBackgroundAvailable, Piece, Segment, free_start, register_clip, retire_clip, usage
+from .base import BackgroundProvider, Piece, Segment, free_start, register_clip, retire_clip, usage
 from .procedural import render_clip
 
 log = logging.getLogger("shorts.background.procedural")
@@ -28,11 +28,12 @@ def active_clips(ctx: Ctx, style: str):
     ).fetchall()
 
 
-def render_one(ctx: Ctx, style: str, seed: int | None = None) -> int:
+def render_one(ctx: Ctx, style: str, seed: int | None = None, min_seconds: float = 0) -> int:
     pc = ctx.config.background.procedural
     seed = seed if seed is not None else random.SystemRandom().randrange(1 << 31)
     out = ctx.work_dir("bg_pool", style) / f"{style}_{seed}.mp4"
-    meta = render_clip(style, out, width=pc.width, height=pc.height, fps=pc.fps, seconds=pc.clip_seconds,
+    meta = render_clip(style, out, width=pc.width, height=pc.height, fps=pc.fps,
+                       seconds=max(pc.clip_seconds, min_seconds + 1),
                        seed=seed, crf=pc.crf, preset=pc.preset)
     log.info("rendered %s seed=%s in %.1fs (%s)", style, seed, meta["render_seconds"], meta["params"])
     return register_clip(ctx.conn, provider="procedural", path=out, duration=meta["seconds"], style=style,
@@ -89,10 +90,8 @@ class ProceduralProvider(BackgroundProvider):
         # Pool empty for these styles: render one on demand (slower, but never blocks the pipeline).
         style = self._style_order(spec.styles or list(PROCEDURAL_STYLES))[0]
         log.info("procedural pool empty for %s; rendering on demand", style)
-        clip_id = render_one(self.ctx, style)
+        clip_id = render_one(self.ctx, style, min_seconds=duration)
         clip = self.ctx.conn.execute("SELECT * FROM bg_clips WHERE id = ?", (clip_id,)).fetchone()
-        if clip["duration"] < duration:
-            raise NoBackgroundAvailable(f"clip_seconds={clip['duration']} shorter than needed {duration:.1f}s")
         return Segment(self.name, [Piece(clip_id, clip["path"], self.rng.uniform(0, clip["duration"] - duration), duration)])
 
     @staticmethod
