@@ -39,8 +39,10 @@ class RedditConfig(_Model):
 
 
 class LLMConfig(_Model):
-    model: str = "claude-sonnet-5-5"
-    max_tokens: int = 4000
+    model: str = "claude-opus-5-5"
+    effort: Literal["low", "medium", "high", "xhigh", "max"] = "medium"
+    max_tokens: int = 16000
+    server_fallbacks: bool = True  # re-run on another model server-side if a request is declined
     max_retries: int = 2
     words_per_minute: int = 165
     max_part_seconds: int = 52

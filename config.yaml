@@ -22,8 +22,10 @@ reddit:
   blocklist: []
 
 llm:
-  model: claude-sonnet-5-5
-  max_tokens: 4000
+  model: claude-opus-5-5 # any Claude model id
+  effort: medium # low | medium | high | xhigh | max (thinking depth / cost)
+  max_tokens: 16000
+  server_fallbacks: true # if a request is declined by safety classifiers, the API retries on a fallback model
   max_retries: 2 # extra attempts when the verbatim or variety checks fail
   words_per_minute: 165 # narration speed estimate before pacing
   max_part_seconds: 52 # LLM budget per part; compose enforces the hard 59 s cap
