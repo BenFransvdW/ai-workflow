@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS videos (
     ass_path      TEXT,
     bg_clip_id    INTEGER REFERENCES bg_clips(id),
     bg_start      REAL,
+    bg_json       TEXT,          -- all background pieces + credits chosen by the background stage
     music_seed    INTEGER,
     video_path    TEXT,
     preview_path  TEXT,
@@ -90,6 +91,7 @@ CREATE TABLE IF NOT EXISTS bg_clips (
     license      TEXT,
     external_id  TEXT,
     created_at   TEXT NOT NULL,
+    retired_at   TEXT,                   -- file deleted (pool rotation / cache eviction)
     UNIQUE (provider, external_id)
 );
 

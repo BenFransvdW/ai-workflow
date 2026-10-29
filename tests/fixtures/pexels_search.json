@@ -1,0 +1,44 @@
+{
+  "page": 1,
+  "per_page": 2,
+  "total_results": 2,
+  "url": "https://www.pexels.com/search/videos/satisfying/",
+  "videos": [
+    {
+      "id": 1001,
+      "width": 1080,
+      "height": 1920,
+      "duration": 4,
+      "url": "https://www.pexels.com/video/slime-being-stretched-1001/",
+      "image": "https://images.pexels.com/videos/1001/preview.jpg",
+      "user": {"id": 77, "name": "Jane Maker", "url": "https://www.pexels.com/@jane-maker"},
+      "video_files": [
+        {"id": 1, "quality": "sd", "file_type": "video/mp4", "width": 540, "height": 960, "fps": 25, "link": "https://videos.pexels.com/video-files/1001/sd.mp4"},
+        {"id": 2, "quality": "hd", "file_type": "video/mp4", "width": 1080, "height": 1920, "fps": 25, "link": "https://videos.pexels.com/video-files/1001/hd.mp4"},
+        {"id": 3, "quality": "uhd", "file_type": "video/mp4", "width": 2160, "height": 3840, "fps": 25, "link": "https://videos.pexels.com/video-files/1001/uhd.mp4"}
+      ]
+    },
+    {
+      "id": 1002,
+      "width": 1920,
+      "height": 1080,
+      "duration": 4,
+      "url": "https://www.pexels.com/video/landscape-only-1002/",
+      "user": {"id": 78, "name": "Landscape Larry", "url": "https://www.pexels.com/@larry"},
+      "video_files": [
+        {"id": 4, "quality": "hd", "file_type": "video/mp4", "width": 1920, "height": 1080, "fps": 30, "link": "https://videos.pexels.com/video-files/1002/hd.mp4"}
+      ]
+    },
+    {
+      "id": 1003,
+      "width": 720,
+      "height": 1280,
+      "duration": 4,
+      "url": "https://www.pexels.com/video/kinetic-sand-cut-1003/",
+      "user": {"id": 79, "name": "Sandy Studio", "url": "https://www.pexels.com/@sandy"},
+      "video_files": [
+        {"id": 5, "quality": "hd", "file_type": "video/mp4", "width": 720, "height": 1280, "fps": 30, "link": "https://videos.pexels.com/video-files/1003/hd.mp4"}
+      ]
+    }
+  ]
+}

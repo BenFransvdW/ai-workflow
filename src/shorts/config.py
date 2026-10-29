@@ -114,6 +114,7 @@ class LocalFolderConfig(_Model):
 
 class BackgroundConfig(_Model):
     pool_size_per_style: int = 2
+    max_uses_per_clip: int = 2  # procedural clips are retired (and re-rendered) after this many uses
     procedural: ProceduralRenderConfig = ProceduralRenderConfig()
     pexels: PexelsConfig = PexelsConfig()
     local_folder: LocalFolderConfig = LocalFolderConfig()

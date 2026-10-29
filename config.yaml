@@ -97,7 +97,8 @@ captions:
       position_y: 0.45
 
 background:
-  pool_size_per_style: 2 # pre-rendered procedural loops kept per style
+  pool_size_per_style: 2 # pre-rendered procedural clips kept per style
+  max_uses_per_clip: 2 # then the clip is deleted and a fresh one (new seed) is rendered
   procedural:
     width: 540 # rendered size; ffmpeg upscales to 1080x1920
     height: 960
