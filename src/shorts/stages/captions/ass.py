@@ -87,6 +87,8 @@ def header(style: CaptionStyle, name: str = "Caption") -> str:
         f"Style: {name},{style.font},{style.size},{ass_color(style.primary)},{ass_color(style.highlight)},"
         f"{ass_color(style.outline)},{ass_color('#000000', 0x80)},{bold},0,0,0,100,100,0,0,1,{style.outline_width},"
         f"{style.shadow},5,90,90,0,1",
+        f"Style: Badge,{style.font},54,{ass_color('#FFFFFF')},{ass_color(style.highlight)},{ass_color(style.outline)},"
+        f"{ass_color(style.highlight, 0x30)},{bold},0,0,0,100,100,2,0,3,10,0,8,60,60,0,1",
         "",
         "[Events]",
         "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text",
@@ -109,10 +111,14 @@ def _words_text(chunk: Chunk, style: CaptionStyle, current: int | None = None) -
 
 
 def build_ass(words: list[Word], style: CaptionStyle, *, max_words: int = 3, max_chars: int = 16,
-              tail: float = 0.25) -> str:
+              tail: float = 0.25, badge: str | None = None, badge_seconds: float = 3.0) -> str:
+    """ASS document for `words`. `badge` (series name / part label) shows at the top for the first seconds."""
     chunks = chunk_words(words, max_words=max_words, max_chars=max_chars)
     x, y = PLAY_W // 2, int(PLAY_H * style.position_y)
     lines = [header(style)]
+    if badge:
+        lines.append(f"Dialogue: 1,{_ts(0)},{_ts(badge_seconds)},Badge,,0,0,0,,"
+                     f"{{\\an8\\pos({x},{int(PLAY_H * 0.13)})\\fad(150,250)}}{_escape(badge.upper())}")
     for k, ch in enumerate(chunks):
         nxt = chunks[k + 1].start if k + 1 < len(chunks) else None
         end = nxt if nxt is not None and nxt - ch.end < 0.5 else ch.end + tail

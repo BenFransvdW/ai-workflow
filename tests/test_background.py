@@ -80,12 +80,15 @@ def test_background_stage_renders_on_demand(ctx):
     sid = insert_story(ctx.conn)
     gid = records.create_group(ctx.conn, sid, "strange_encounters")
     vid = records.group_videos(ctx.conn, gid)[0]["id"]
-    ctx.conn.execute("UPDATE videos SET duration = 2.0 WHERE id = ?", (vid,))
+    from shorts.fixtures import placeholder_speech
+    wav = placeholder_speech("one two three four", ctx.work_dir("t") / "v.wav")
+    ctx.conn.execute("UPDATE videos SET audio_path = ? WHERE id = ?", (str(wav), vid))
+    need = media.duration(wav) + 0.8
     # pexels has no API key → falls through to procedural, which renders on demand.
     seg = background_video(ctx, vid, random.Random(5))
     assert seg.provider == "procedural"
     row = ctx.conn.execute("SELECT * FROM videos WHERE id=?", (vid,)).fetchone()
-    assert json.loads(row["bg_json"])["pieces"][0]["duration"] == pytest.approx(2.6)
+    assert json.loads(row["bg_json"])["pieces"][0]["duration"] == pytest.approx(need)
     style = ctx.conn.execute("SELECT style FROM bg_clips WHERE id=?", (row["bg_clip_id"],)).fetchone()[0]
     assert style in ("plasma", "flowfield")
 

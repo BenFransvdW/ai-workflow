@@ -6,6 +6,7 @@ import json
 import logging
 import random
 
+from ... import media
 from ...config import SeriesBackground
 from ...context import Ctx
 from ...db import update
@@ -51,9 +52,9 @@ def choose_segment(ctx: Ctx, series_name: str, duration: float, rng: random.Rand
 
 def background_video(ctx: Ctx, video_id: int, rng: random.Random | None = None) -> Segment:
     video, group, _ = video_context(ctx.conn, video_id)
-    if not video["duration"]:
-        raise RuntimeError(f"video {video_id} has no narration duration yet; run tts first")
-    need = float(video["duration"]) + 0.6  # small margin for the end fade
+    if not video["audio_path"]:
+        raise RuntimeError(f"video {video_id} has no narration yet; run tts first")
+    need = media.duration(video["audio_path"]) + 0.8  # compose adds a short musical tail
     seg = choose_segment(ctx, group["series"], need, rng)
     record_usage(ctx.conn, seg, video_id)
     update(ctx.conn, "videos", video_id, bg_clip_id=seg.pieces[0].clip_id, bg_start=seg.pieces[0].start,
