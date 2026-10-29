@@ -1,0 +1,200 @@
+# Shorts pipeline configuration. Secrets live in .env, never here.
+# Relative paths are resolved against the directory containing this file.
+
+timezone: UTC # IANA name, e.g. Europe/London. Used for posting times and the daily cap.
+
+paths:
+  data_dir: data # SQLite DB, renders, caches, logs
+  fonts_dir: assets/fonts
+  music_dir: assets/music
+  models_dir: models # Piper voices, whisper cache
+
+reddit:
+  subreddits: [AmItheAsshole, AITAH, pettyrevenge, ProRevenge, MaliciousCompliance, LetsNotMeet, Glitch_in_the_Matrix]
+  listing: top # top | hot | new
+  time_filter: week # for `top`: day | week | month | year | all
+  limit_per_subreddit: 40
+  min_score: 100
+  min_words: 120
+  max_words: 1100
+  min_candidates: 8 # fetch again when fewer unused candidates remain
+  # Extra words/names that make a post ineligible (case-insensitive, whole word).
+  blocklist: []
+
+llm:
+  model: claude-opus-5-5 # any Claude model id
+  effort: medium # low | medium | high | xhigh | max (thinking depth / cost)
+  max_tokens: 16000
+  server_fallbacks: true # if a request is declined by safety classifiers, the API retries on a fallback model
+  max_retries: 2 # extra attempts when the verbatim or variety checks fail
+  words_per_minute: 165 # narration speed estimate before pacing
+  max_part_seconds: 52 # LLM budget per part; compose enforces the hard 59 s cap
+  max_parts: 3
+  verbatim_ngram: 8 # any shared run of this many words with the source = rejected
+  similarity_threshold: 0.35 # trigram Jaccard vs recent hooks/commentaries
+  history_size: 60
+
+tts:
+  voices:
+    adam_eleven: {provider: elevenlabs, voice_id: pNInz6obpgDQGcFmaJgB, model: eleven_multilingual_v2}
+    rachel_eleven: {provider: elevenlabs, voice_id: 21m00Tcm4TlvDq8ikWAM, model: eleven_multilingual_v2}
+    onyx_openai: {provider: openai, voice: onyx, model: gpt-4o-mini-tts, instructions: "Engaging storyteller, natural pauses."}
+    nova_openai: {provider: openai, voice: nova, model: gpt-4o-mini-tts, instructions: "Warm, conversational, a little wry."}
+    ryan_piper: {provider: piper, model: en_US-ryan-high}
+    amy_piper: {provider: piper, model: en_US-amy-medium}
+    espeak: {provider: espeak, voice: en-us+m3, speed: 165} # last-resort offline voice, used for tests
+
+captions:
+  whisper_model: small # tiny/base are faster on a Pi; small is more accurate
+  whisper_compute_type: int8
+  max_words: 3
+  max_chars: 16
+  styles:
+    bold_pop:
+      font: Inter Black
+      size: 104
+      primary: "#FFFFFF"
+      highlight: "#FFD60A"
+      outline: "#000000"
+      outline_width: 9
+      shadow: 3
+      uppercase: true
+      animation: pop
+      position_y: 0.52
+    karaoke_clean:
+      font: Liberation Sans
+      bold: true
+      size: 96
+      primary: "#FFFFFF"
+      highlight: "#3DDC97"
+      outline: "#101010"
+      outline_width: 7
+      shadow: 0
+      uppercase: false
+      animation: karaoke
+      position_y: 0.4
+    soft_fade:
+      font: DejaVu Serif
+      bold: true
+      size: 96
+      primary: "#F4F1EA"
+      highlight: "#C3A6FF"
+      outline: "#1B1035"
+      outline_width: 6
+      shadow: 4
+      uppercase: false
+      animation: fade
+      position_y: 0.5
+    neon_bounce:
+      font: DejaVu Sans
+      bold: true
+      size: 100
+      primary: "#7DF9FF"
+      highlight: "#FF4FD8"
+      outline: "#05051A"
+      outline_width: 8
+      shadow: 2
+      uppercase: true
+      animation: bounce
+      position_y: 0.45
+
+background:
+  pool_size_per_style: 2 # pre-rendered procedural clips kept per style
+  max_uses_per_clip: 2 # then the clip is deleted and a fresh one (new seed) is rendered
+  procedural:
+    width: 540 # rendered size; ffmpeg upscales to 1080x1920
+    height: 960
+    fps: 30
+    clip_seconds: 62
+    crf: 20
+    preset: veryfast
+  pexels:
+    themes: [satisfying, slime, kinetic sand, cooking close up, drone ocean, rain window, pottery wheel, city night timelapse]
+    per_page: 10
+    max_cached_clips: 60
+    reuse_days: 30 # never reuse an overlapping segment of a clip within this many days
+    min_height: 1280
+  local_folder:
+    path: null # e.g. /home/pi/clips
+
+music:
+  volume_db: -22 # bed level before ducking under the voice
+  beds:
+    tense: procedural:tense
+    calm: procedural:calm
+    eerie: procedural:eerie
+    upbeat: procedural:upbeat
+    # lofi: folder:lofi   # tracks in assets/music/lofi/
+
+compose:
+  width: 1080
+  height: 1920
+  fps: 30
+  crf: 21
+  preset: veryfast # libx264; the Pi 5 has no hardware H.264 encoder
+  maxrate_mbps: 10 # bitrate cap for very detailed backgrounds
+  max_seconds: 59
+  max_speedup: 1.12
+  loudness_i: -14
+  loudness_tp: -1.5
+  loudness_lra: 11
+  telegram_max_mb: 48
+
+series:
+  - name: verdict_hour
+    display_name: Verdict Hour
+    subreddits: [AmItheAsshole, AITAH]
+    voices: [adam_eleven, onyx_openai, ryan_piper]
+    caption_styles: [bold_pop]
+    backgrounds:
+      - {provider: procedural, styles: [plinko, bouncing], weight: 3}
+      - {provider: pexels, themes: [satisfying, kinetic sand], weight: 1}
+    music: [tense]
+    pacing: 1.08
+    tone: Punchy courtroom-style narrator with dry wit.
+    ending: Deliver your own verdict (NTA/YTA/ESH/NAH) with a one-line reason that adds a new angle.
+    title_prefix: ""
+  - name: petty_revenge
+    display_name: Petty Revenge
+    subreddits: [pettyrevenge, ProRevenge, MaliciousCompliance]
+    voices: [nova_openai, rachel_eleven, amy_piper]
+    caption_styles: [karaoke_clean, neon_bounce]
+    backgrounds:
+      - {provider: procedural, styles: [runner, flowfield], weight: 2}
+      - {provider: pexels, themes: [cooking close up, pottery wheel], weight: 1}
+    music: [upbeat]
+    pacing: 1.05
+    tone: Gleeful, conspiratorial friend telling you the story over coffee.
+    ending: Ask viewers a specific, story-related question that invites them to share their own experience.
+    title_prefix: ""
+  - name: strange_encounters
+    display_name: Strange Encounters
+    subreddits: [LetsNotMeet, Glitch_in_the_Matrix]
+    voices: [onyx_openai, ryan_piper]
+    caption_styles: [soft_fade]
+    backgrounds:
+      - {provider: procedural, styles: [plasma, flowfield], weight: 3}
+      - {provider: pexels, themes: [rain window, city night timelapse, drone ocean], weight: 1}
+    music: [eerie]
+    pacing: 0.98
+    tone: Calm, slightly unsettling late-night radio host.
+    ending: Close with a practical safety lesson or an unsettling observation of your own.
+    title_prefix: ""
+
+limits:
+  max_uploads_per_day: 2 # hard cap
+  posting_times: ["12:40", "18:40"] # local times; one upload per slot at most
+  max_renders_per_run: 2
+  max_attempts: 3 # per stage before a video is left in `failed`
+
+approval:
+  window_hours: 48 # unapproved videos expire after this
+  backlog_target: 3 # keep this many groups waiting for approval
+  poll_seconds: 30
+  trigger_run_on_regenerate: true # bot starts `shorts run` after Regenerate
+
+upload:
+  dry_run: true # set to false (or pass --live) only once you've tested OAuth
+  privacy_status: public # public | unlisted | private
+  category_id: "24" # Entertainment
+  default_language: en

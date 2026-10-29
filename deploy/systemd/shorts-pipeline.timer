@@ -1,0 +1,11 @@
+[Unit]
+Description=Run the shorts pipeline every 30 minutes
+
+[Timer]
+OnBootSec=5min
+OnCalendar=*:0/30
+RandomizedDelaySec=60
+Persistent=true
+
+[Install]
+WantedBy=timers.target
