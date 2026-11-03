@@ -166,6 +166,12 @@ The faster-whisper `small` model (about 460 MB) downloads on first use into `mod
 
 If whisper can't load, captions fall back to an energy-based aligner that is in sync sentence by sentence but less precise per word. Set `captions.whisper_model: base` for faster runs.
 
+Check your setup (offline; lists missing binaries, secrets and models, exits 1 on failures):
+
+```bash
+.venv/bin/python -m shorts doctor
+```
+
 Check that everything works offline (no keys needed):
 
 ```bash
@@ -385,7 +391,7 @@ Run the suite with:
 .venv/bin/python -m pytest -q
 ```
 
-All 233 tests run offline.
+All 242 tests run offline.
 
 - **Fully exercised end to end with real media:** captions, procedural backgrounds, music and compose (ffprobe checks 1080x1920, h264/aac, under 60 s, about -14 LUFS).
 - **Exercised with mocked APIs:**
