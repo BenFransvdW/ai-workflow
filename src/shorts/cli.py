@@ -45,6 +45,7 @@ def _parser() -> argparse.ArgumentParser:
     sp.add_argument("--seconds", type=float, default=None, help="trim fixture narration to this length")
     sp.add_argument("--style", action="append")
     sub.add_parser("auth-youtube", help="one-time OAuth flow; writes YOUTUBE_TOKEN_FILE")
+    sub.add_parser("doctor", help="offline preflight check of binaries, secrets, models and config")
     sub.add_parser("status", help="print queue counts and next upload time")
     return p
 
@@ -103,6 +104,9 @@ def main(argv: list[str] | None = None) -> int:
     elif cmd == "auth-youtube":
         from .stages.upload import authorize
         authorize(ctx)
+    elif cmd == "doctor":
+        from .doctor import doctor
+        return doctor(ctx)
     elif cmd == "status":
         from .approval.service import ApprovalService
         print(json.dumps(ApprovalService(ctx).status(datetime.now(timezone.utc)), indent=2, default=str))
