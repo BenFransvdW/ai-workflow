@@ -238,4 +238,4 @@ def test_status_pause_resume_commands(ctx):
 
 def test_application_builds(ctx):
     app = make_bot(ctx).build_application("123456:TEST-token")
-    assert app.job_queue is not None and len(app.handlers[0]) == 7
+    assert app.job_queue is not None and len(app.handlers[0]) == 8
