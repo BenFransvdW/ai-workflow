@@ -12,9 +12,9 @@
   - `run_health` / `health_text`: problems first. FAIL when videos have used up `limits.max_attempts`. WARN on 3+ failures in 24 h. Inspects the YouTube token JSON offline: an expired token with no refresh token is a WARN in dry-run and a FAIL when live. All `doctor` checks are included.
   - `new_failure_alert`: reports failures recorded since the last poll. It tracks the last seen `video_events.id` in `settings`. The first call only sets a baseline, so failures from before the bot started aren't replayed.
 - Bot: added the `/health` command, and `tick` now sends failure alerts. Updated the HELP text and README.
-- Added `tests/test_health.py` and updated the handler count in `test_approval.py`.
+- Added `tests/test_health.py` (12 tests) and updated the handler count in `test_approval.py`. Full suite: 254 passed.
 - Nothing half-done. Limitation: a *revoked* refresh token can't be detected offline. It only shows up as an upload failure, which the new alert does report.
-- Dev-env note: `python -m pip install -e '.[dev]'` in this container is slow (several minutes) and its output was swallowed when piped through `tail`. Install `pytest` first if you need it quickly.
+- Dev-env note: `python -m pip install -e '.[dev]'` in this container is slow (several minutes) and its output was swallowed when piped through `tail`. Use `.[all,dev]`; the bot tests need `telegram`. Reinstall Pillow/cryptography with `--ignore-installed` as before.
 
 ## Next 3 priorities
 1. Retention/cleanup: prune old `data/videos/*` working dirs and dry-run output after upload, expiry or rejection, to protect SD-card space. Add a disk-free check to `/health`.

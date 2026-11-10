@@ -393,7 +393,7 @@ Run the suite with:
 .venv/bin/python -m pytest -q
 ```
 
-All 242 tests run offline.
+All 254 tests run offline.
 
 - **Fully exercised end to end with real media:** captions, procedural backgrounds, music and compose (ffprobe checks 1080x1920, h264/aac, under 60 s, about -14 LUFS).
 - **Exercised with mocked APIs:**
