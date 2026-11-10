@@ -67,7 +67,9 @@ If a provider is unavailable (for example no Pexels key or no network), the pipe
 - **Expiry and backlog:** videos not approved within `approval.window_hours` (48) **expire and are never uploaded**. The pipeline keeps about `approval.backlog_target` (3) groups waiting so you can approve several at once.
 - **Commands:**
   - `/status`: queue counts, uploads today against the cap, next upload slot, candidate stories.
+  - `/health`: problems first: videos that gave up after `limits.max_attempts`, 3+ failures in 24 h, an expired YouTube token with no refresh token, plus every `doctor` check.
   - `/pause` and `/resume`: stop or restart generation and uploads.
+- **Failure alerts:** each poll, the bot reports any new render or upload failures (group, attempt count, first line of the error). Failures from before the bot started are not replayed.
 - **Large files:** if a render is over `compose.telegram_max_mb` (48 MB; bots can send 50 MB), a 720p preview is sent instead. The full-quality file is what gets uploaded.
 
 ---
@@ -391,7 +393,7 @@ Run the suite with:
 .venv/bin/python -m pytest -q
 ```
 
-All 242 tests run offline.
+All 254 tests run offline.
 
 - **Fully exercised end to end with real media:** captions, procedural backgrounds, music and compose (ffprobe checks 1080x1920, h264/aac, under 60 s, about -14 LUFS).
 - **Exercised with mocked APIs:**

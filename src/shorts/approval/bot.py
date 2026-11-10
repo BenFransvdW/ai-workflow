@@ -24,7 +24,7 @@ HELP = (
     "• Reject: never use this story (reply with a reason if you like)\n"
     "• Regenerate: new script, voice and visuals for the same story\n"
     "Reply \"title: New title\" to a video's summary to rename it.\n"
-    "/status · /pause · /resume"
+    "/status · /health · /pause · /resume"
 )
 
 
@@ -63,6 +63,17 @@ class ApprovalBot:
                 await self.send_group(context.bot, gid)
             except Exception:
                 log.exception("failed to send group %s", gid)
+        await self._alert_failures(context.bot)
+
+    async def _alert_failures(self, bot) -> None:
+        from ..health import new_failure_alert
+
+        try:
+            text = new_failure_alert(self.ctx)
+            if text:
+                await bot.send_message(chat_id=self.chat_id, text=text)
+        except Exception:
+            log.exception("failure alert failed")
 
     async def send_group(self, bot, group_id: int) -> None:
         out = self.svc.outgoing(group_id)
@@ -160,6 +171,12 @@ class ApprovalBot:
         if self.authorized(update):
             await update.effective_message.reply_text(self.svc.status_text())
 
+    async def on_health(self, update, context) -> None:
+        if self.authorized(update):
+            from ..health import health_text
+
+            await update.effective_message.reply_text(health_text(self.ctx))
+
     async def on_pause(self, update, context) -> None:
         if self.authorized(update):
             self.svc.pause()
@@ -198,6 +215,7 @@ class ApprovalBot:
         app = Application.builder().token(token).build()
         only_me = filters.Chat(chat_id=self.chat_id)
         app.add_handler(CommandHandler("status", self.on_status, filters=only_me))
+        app.add_handler(CommandHandler("health", self.on_health, filters=only_me))
         app.add_handler(CommandHandler("pause", self.on_pause, filters=only_me))
         app.add_handler(CommandHandler("resume", self.on_resume, filters=only_me))
         app.add_handler(CommandHandler(["start", "help"], self.on_help, filters=only_me))
