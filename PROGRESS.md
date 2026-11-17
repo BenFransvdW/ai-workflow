@@ -5,18 +5,33 @@
 - Stages: fetch + filters, Claude script rewrite, TTS (ElevenLabs/OpenAI/Piper/espeak), captions, background (procedural/Pexels/local), music, compose, upload (dry-run default)
 - Telegram approval bot, orchestrator `run`, systemd units, samples
 - `shorts doctor`: offline preflight (ffmpeg, secrets, Piper models, YouTube token, dry-run state) — weekly/2026-11-03
-- Telegram `/health` command + proactive failure alerts — weekly/2026-11-10
+- Telegram `/health` command + proactive failure alerts — weekly/2026-11-10 (PR #3, open)
+- Stale-run / low-disk / rejected-token health checks, debounced condition alerts, `shorts health` CLI — weekly/2026-11-17 (stacked on PR #3)
 
-## Last session (2026-11-10)
-- Added `src/shorts/health.py`:
-  - `run_health` / `health_text`: problems first. FAIL when videos have used up `limits.max_attempts`. WARN on 3+ failures in 24 h. Inspects the YouTube token JSON offline: an expired token with no refresh token is a WARN in dry-run and a FAIL when live. All `doctor` checks are included.
-  - `new_failure_alert`: reports failures recorded since the last poll. It tracks the last seen `video_events.id` in `settings`. The first call only sets a baseline, so failures from before the bot started aren't replayed.
-- Bot: added the `/health` command, and `tick` now sends failure alerts. Updated the HELP text and README.
-- Added `tests/test_health.py` (12 tests) and updated the handler count in `test_approval.py`. Full suite: 254 passed.
-- Nothing half-done. Limitation: a *revoked* refresh token can't be detected offline. It only shows up as an upload failure, which the new alert does report.
-- Dev-env note: `python -m pip install -e '.[dev]'` in this container is slow (several minutes) and its output was swallowed when piped through `tail`. Use `.[all,dev]`; the bot tests need `telegram`. Reinstall Pillow/cryptography with `--ignore-installed` as before.
+## Last session (2026-11-17)
+- PR #3 (weekly/2026-11-10, /health + failure alerts) is still unmerged, so `PROGRESS.md` on the default
+  branch didn't mention it. This session first re-implemented /health by mistake, noticed PR #3, threw
+  that away, and rebuilt on top of PR #3 instead. **This branch is stacked on `weekly/2026-11-10`; merge PR #3 first.**
+- `src/shorts/health.py` additions:
+  - `mark_run` records `last_run_at` in `settings` after each completed (or paused) `run_once` pass.
+    `/health` WARNs when no pass has completed for `health.stale_run_hours` (6h; the timer fires every 30 min).
+    It skips this check when paused or on a fresh install.
+  - Disk-space check: WARN below `health.min_free_gb` (2 GB) free on the data disk.
+  - Live mode only: FAIL when a recent upload failure says `invalid_grant`, i.e. Google revoked or expired the refresh token.
+  - `condition_alert`: the bot pushes those three conditions, since none of them creates a failure event
+    for `new_failure_alert` to report. It's debounced: it sends when a new problem appears, repeats every
+    `alert_every_hours` (12), and sends one all-clear when everything is fixed.
+- The hard-coded 24h / 3-failure constants moved to a new `health:` section in `config.yaml`.
+- New `python -m shorts health` CLI command (exit 1 on FAIL).
+- `tests/conftest.py` sets `health.min_free_gb: 0` so the host's real disk can't make tests flaky.
+- 11 new tests in `tests/test_health.py`. Full suite: 265 passed.
+- Dev-env note: in a fresh container run `python -m pip install -e '.[all,dev]'`, then
+  `python -m pip install --ignore-installed cryptography Pillow cffi`; without the second step, telegram imports panic.
+- Nothing half-done.
 
 ## Next 3 priorities
-1. Retention/cleanup: prune old `data/videos/*` working dirs and dry-run output after upload, expiry or rejection, to protect SD-card space. Add a disk-free check to `/health`.
-2. Run on a real Raspberry Pi 5: verify performance estimates, Piper/whisper installs, and that `doctor` and `/health` output is accurate there.
-3. Daily digest: an optional once-a-day Telegram message (uploads, rejections, failures) using `health_text` and `status_text`.
+1. Retention/cleanup: prune old `data/videos/*` working dirs and dry-run output after upload, expiry or
+   rejection, to protect SD-card space. The new low-disk alert flags the problem but nothing frees space yet.
+2. Daily digest: an optional once-a-day Telegram message (uploads, rejections, failures) built from `health_text` + `status_text`.
+3. Run on a real Raspberry Pi 5: check the performance estimates, the Piper/whisper installs, and that `doctor`/`/health` are accurate there.
+   This needs the hardware.

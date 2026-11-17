@@ -66,14 +66,15 @@ class ApprovalBot:
         await self._alert_failures(context.bot)
 
     async def _alert_failures(self, bot) -> None:
-        from ..health import new_failure_alert
+        from ..health import condition_alert, new_failure_alert
 
-        try:
-            text = new_failure_alert(self.ctx)
-            if text:
-                await bot.send_message(chat_id=self.chat_id, text=text)
-        except Exception:
-            log.exception("failure alert failed")
+        for make in (new_failure_alert, condition_alert):
+            try:
+                text = make(self.ctx)
+                if text:
+                    await bot.send_message(chat_id=self.chat_id, text=text)
+            except Exception:
+                log.exception("%s failed", make.__name__)
 
     async def send_group(self, bot, group_id: int) -> None:
         out = self.svc.outgoing(group_id)

@@ -46,6 +46,7 @@ def _parser() -> argparse.ArgumentParser:
     sp.add_argument("--style", action="append")
     sub.add_parser("auth-youtube", help="one-time OAuth flow; writes YOUTUBE_TOKEN_FILE")
     sub.add_parser("doctor", help="offline preflight check of binaries, secrets, models and config")
+    sub.add_parser("health", help="runtime health: failures, stalled runs, YouTube token, disk, plus doctor")
     sub.add_parser("status", help="print queue counts and next upload time")
     return p
 
@@ -107,6 +108,10 @@ def main(argv: list[str] | None = None) -> int:
     elif cmd == "doctor":
         from .doctor import doctor
         return doctor(ctx)
+    elif cmd == "health":
+        from .health import FAIL, health_text, run_health
+        print(health_text(ctx))
+        return 1 if any(c.level == FAIL for c in run_health(ctx)) else 0
     elif cmd == "status":
         from .approval.service import ApprovalService
         print(json.dumps(ApprovalService(ctx).status(datetime.now(timezone.utc)), indent=2, default=str))
