@@ -17,6 +17,7 @@ from datetime import datetime, timezone
 from .approval.service import ApprovalService
 from .context import Ctx
 from .db import is_paused
+from .health import mark_run
 from .lock import FileLock, LockHeld
 from .pipeline import new_group, produce, retry_failed
 from .records import count_groups_in
@@ -82,6 +83,7 @@ def run_once(ctx: Ctx, *, live: bool = False, generate: bool = True, now: dateti
             log.info("expired groups: %s", expired)
         if is_paused(ctx.conn):
             log.info("paused; skipping generation and uploads")
+            mark_run(ctx, now)
             return 0
         dry = not live and ctx.config.upload.dry_run
         (uploader or process_upload_queue)(ctx, dry_run=dry, now=now)
@@ -90,6 +92,7 @@ def run_once(ctx: Ctx, *, live: bool = False, generate: bool = True, now: dateti
             log.info("rendered %d group(s) this run", n)
             ProceduralProvider.retire_worn(ctx)
             fill_pool(ctx, deadline=started + pool_budget_seconds)
+        mark_run(ctx, now)  # only after a pass completes, so a crashing run shows up as stale
         log.info("run finished in %.0fs: %s", time.monotonic() - started, svc.status_text(now).replace("\n", " | "))
         return 0
     finally:

@@ -193,6 +193,14 @@ approval:
   poll_seconds: 30
   trigger_run_on_regenerate: true # bot starts `shorts run` after Regenerate
 
+health: # /health in Telegram, `shorts health`, and the bot's proactive alerts
+  failure_window_hours: 24
+  failure_threshold: 3 # failures in the window before warning
+  stale_run_hours: 6 # warn if the run timer seems to have stopped (it fires every 30 min)
+  min_free_gb: 2.0 # warn when the data disk is nearly full
+  condition_alerts: true # push stale-run / low-disk / rejected-token alerts
+  alert_every_hours: 12 # repeat those while they persist; an all-clear is sent once fixed
+
 upload:
   dry_run: true # set to false (or pass --live) only once you've tested OAuth
   privacy_status: public # public | unlisted | private

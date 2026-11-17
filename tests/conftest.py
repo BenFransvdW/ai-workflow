@@ -35,6 +35,8 @@ def cfg(raw_config, tmp_path) -> Config:
     raw_config["paths"]["models_dir"] = str(tmp_path / "models")
     # Small, fast procedural renders for tests.
     raw_config["background"]["procedural"].update(width=180, height=320, fps=10, clip_seconds=3, preset="ultrafast")
+    # Never warn about the host's real free disk space; tests that need it set min_free_gb.
+    raw_config.setdefault("health", {})["min_free_gb"] = 0
     c = Config.model_validate(raw_config)
     c.root = tmp_path
     return c

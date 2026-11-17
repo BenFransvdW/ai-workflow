@@ -202,6 +202,15 @@ class ApprovalConfig(_Model):
     trigger_run_on_regenerate: bool = True
 
 
+class HealthConfig(_Model):
+    failure_window_hours: float = 24
+    failure_threshold: int = 3  # failures within the window before /health warns
+    stale_run_hours: float = 6  # warn if `shorts run` hasn't completed a pass for this long
+    min_free_gb: float = 2.0  # warn when the data disk has less free space
+    condition_alerts: bool = True  # bot pushes stale-run / low-disk / token alerts
+    alert_every_hours: float = 12  # repeat those alerts while the problem persists
+
+
 class UploadConfig(_Model):
     dry_run: bool = True
     privacy_status: Literal["public", "unlisted", "private"] = "public"
@@ -223,6 +232,7 @@ class Config(_Model):
     limits: LimitsConfig = LimitsConfig()
     approval: ApprovalConfig = ApprovalConfig()
     upload: UploadConfig = UploadConfig()
+    health: HealthConfig = HealthConfig()
 
     root: Path = Path(".")  # set by load_config; not read from YAML
 

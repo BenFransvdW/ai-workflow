@@ -70,6 +70,7 @@ If a provider is unavailable (for example no Pexels key or no network), the pipe
   - `/health`: problems first: videos that gave up after `limits.max_attempts`, 3+ failures in 24 h, an expired YouTube token with no refresh token, plus every `doctor` check.
   - `/pause` and `/resume`: stop or restart generation and uploads.
 - **Failure alerts:** each poll, the bot reports any new render or upload failures (group, attempt count, first line of the error). Failures from before the bot started are not replayed.
+- **Health alerts:** the bot also pushes an alert when the pipeline hasn't completed a run for `health.stale_run_hours` (timer stopped or every run crashing), the data disk has less than `health.min_free_gb` free, or Google rejected the YouTube token during a live upload. It repeats every `health.alert_every_hours` while the problem persists and sends one all-clear once it's fixed. These checks also appear in `/health` and in `python -m shorts health` (exit 1 on failures). Thresholds live in `config.yaml → health`.
 - **Large files:** if a render is over `compose.telegram_max_mb` (48 MB; bots can send 50 MB), a 720p preview is sent instead. The full-quality file is what gets uploaded.
 
 ---
@@ -393,7 +394,7 @@ Run the suite with:
 .venv/bin/python -m pytest -q
 ```
 
-All 254 tests run offline.
+All 265 tests run offline.
 
 - **Fully exercised end to end with real media:** captions, procedural backgrounds, music and compose (ffprobe checks 1080x1920, h264/aac, under 60 s, about -14 LUFS).
 - **Exercised with mocked APIs:**
